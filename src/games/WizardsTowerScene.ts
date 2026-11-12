@@ -334,7 +334,7 @@ function initialize(width: number, height: number): GameState {
     animations: new Set<LinearAnimation>(),
     spawnTimer: 3.0,
     spawnCount: 0,
-    fireballTimer: new Timer(5),
+    fireballTimer: new Timer(3),
     hudFireball,
     hudFireballGray: undefined,
     hudGameOver,
