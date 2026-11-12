@@ -113,21 +113,36 @@ export class WizardsTowerScene implements Scene {
     if (this.state.phase !== "playing") return;
 
     while (this.state.spawnTimer <= 0) {
-      this.spawnOrk();
+      this.spawnEnemy();
       this.state.spawnTimer += 3.0;
     }
   }
 
-  private spawnOrk(): void {
+  private spawnEnemy(): void {
     const state = this.state;
-    const ork = new Enemy("assets/Ork.png", 2);
+    const enemyType = state.spawnCount % 2 === 0;
+    const ork = new Enemy(
+      enemyType ? "assets/Ork.png" : "assets/Gargoyle.png",
+      2,
+    );
     ork.x = 0;
     ork.y = state.groundY - 14;
     ork.vx = 30;
     ork.targetX = state.tower.x - 8 + 8 * Math.random() - 4;
-    ork.onAttack = (strength) => {
-      state.events.push(attackTower(strength));
-    };
+
+    if (enemyType) {
+      ork.onAttack = (strength) => {
+        state.events.push(attackTower(strength));
+      };
+    } else {
+      ork.onAttack = (strength) => {
+        const p = new Projectile("assets/Fireball.png", 2);
+        p.x = ork.x;
+        p.y = ork.y;
+        p.vx = 0.5;
+        state.projectiles.add(p);
+      };
+    }
 
     state.enemies.add(ork);
 
