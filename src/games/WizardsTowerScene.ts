@@ -104,9 +104,7 @@ export class WizardsTowerScene implements Scene {
   private checkGameOver(): void {
     if (this.state.phase !== "playing") return;
 
-    const fallenY = this.state.groundY - 14;
-
-    if (this.state.tower.y >= fallenY) {
+    if (this.state.tower.hp <= 0) {
       this.state.phase = "gameover";
     }
   }
@@ -321,7 +319,7 @@ function initialize(width: number, height: number): GameState {
   const hudGameOver = new Entity("assets/Itisover.png");
   const tower = new Tower("assets/Tower.png");
   tower.x = (width - 32) / 2;
-  tower.y = (height - 128) / 2;
+  tower.y = 16;
   const wizard = new Entity("assets/Wizard.png", 4);
   wizard.x = tower.x + 8;
   wizard.y = tower.y + 8;
@@ -342,7 +340,7 @@ function initialize(width: number, height: number): GameState {
     hudGameOver,
     wizard,
     tower,
-    groundY: tower.y + 78,
+    groundY: 120,
   };
 
   state.background.add(wizard);
