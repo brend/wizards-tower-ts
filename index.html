@@ -1,11 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <title>Wizard's Tower</title>
-</head>
-<body>
-    <script type="module" src="/src/main.ts"></script>
-</body>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0b1020;
+      }
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: auto !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="start-screen" class="start-screen">
+        <h1>Wizard's Tower</h1>
+        <p>Defend your tower. Click or touch to hurl fireballs.</p>
+        <button id="start-button" type="button">Start game</button>
+      </div>
+      <div class="controls">
+        <button id="pause-button" type="button" disabled>Pause</button>
+        <button id="resume-button" type="button" disabled>Resume</button>
+        <button id="sound-button" type="button" aria-pressed="false" disabled>
+          Enable sound
+        </button>
+      </div>
+    </div>
+    <script type="module" src="src/main.ts"></script>
+  </body>
 </html>

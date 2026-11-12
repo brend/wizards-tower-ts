@@ -1,0 +1,7 @@
+[
+  {"id": "welcome", "text": "Welcome to the wizard's tower."},
+  {"id": "hold", "text": "You shall not pass!"},
+  {"id": "spell", "text": "By my beard! Fireball!"},
+  {"id": "hurt", "text": "Ouch! My tower!"},
+  {"id": "victory", "text": "The tower stands. Victory is mine!"}
+]

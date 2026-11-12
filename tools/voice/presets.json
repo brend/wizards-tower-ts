@@ -1,0 +1,43 @@
+{
+  "spellbox": {
+    "description": "Nasal toy-computer voice; narrow bandwidth and coarse six-bit steps.",
+    "voice": "Zarvox",
+    "rate": 145,
+    "pitch": 1.08,
+    "sample_rate": 8000,
+    "bits": 6,
+    "highpass": 180,
+    "lowpass": 2800,
+    "dpcm": false,
+    "echo_ms": 0,
+    "echo_gain": 0
+  },
+  "cartridge": {
+    "description": "Grainy cartridge speech with softened DAC buzz and clearer articulation.",
+    "voice": "Fred",
+    "rate": 165,
+    "pitch": 0.94,
+    "sample_rate": 11025,
+    "bits": 7,
+    "highpass": 150,
+    "lowpass": 3400,
+    "dpcm": true,
+    "dpcm_mix": 0.65,
+    "output_lowpass": 3200,
+    "echo_ms": 0,
+    "echo_gain": 0
+  },
+  "arcane": {
+    "description": "Lower, slower robot wizard with a short, dark echo.",
+    "voice": "Trinoids",
+    "rate": 135,
+    "pitch": 0.82,
+    "sample_rate": 8000,
+    "bits": 7,
+    "highpass": 120,
+    "lowpass": 2600,
+    "dpcm": false,
+    "echo_ms": 105,
+    "echo_gain": 0.22
+  }
+}
