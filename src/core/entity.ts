@@ -7,6 +7,7 @@ export class Entity {
   y: number;
   w: number;
   h: number;
+  // Velocity in logical pixels per second.
   vx: number;
   vy: number;
   ready: boolean;
@@ -92,8 +93,8 @@ export class Entity {
   }
 
   update(dt: number) {
-    this.x += this.vx;
-    this.y += this.vy;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
     this.frameTime += dt;
 
     while (this.frameTime >= this.frameDuration) {
