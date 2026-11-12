@@ -7,6 +7,7 @@ import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Enemy } from "../core/Enemy";
 import { Projectile } from "../core/Projectile";
+import { Tower } from "./WizardsTowerEntities";
 
 interface GameState {
   phase: "ready" | "playing" | "gameover";
@@ -15,7 +16,7 @@ interface GameState {
   projectiles: Set<Projectile>;
   background: Set<Entity>;
   wizard: Entity;
-  tower: Enemy;
+  tower: Tower;
   events: TowerEvent[];
   animations: Set<LinearAnimation>;
   spawnTimer: number;
@@ -319,10 +320,9 @@ function initialize(width: number, height: number): GameState {
   hudFireball.x = 160 - 6 + 2;
   hudFireball.y = 120 + 2;
   const hudGameOver = new Entity("assets/Itisover.png");
-  const tower = new Enemy("assets/Tower.png");
+  const tower = new Tower("assets/Tower.png");
   tower.x = (width - 32) / 2;
   tower.y = (height - 128) / 2;
-  tower.showHp = false;
   const wizard = new Entity("assets/Wizard.png", 4);
   wizard.x = tower.x + 8;
   wizard.y = tower.y + 8;
