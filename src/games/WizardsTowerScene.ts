@@ -188,7 +188,7 @@ export class WizardsTowerScene implements Scene {
   }
 
   private spawnFireball(destX: number, destY: number): boolean {
-    const fireball = new Projectile("assets/Fireball.png");
+    const fireball = new Projectile("assets/Fireball.png", 2);
     fireball.x = this.state.wizard.x + 8;
     fireball.y = this.state.wizard.y;
     fireball.w = 8;
@@ -313,9 +313,9 @@ export class WizardsTowerScene implements Scene {
 }
 
 function initialize(width: number, height: number): GameState {
-  const hudFireball = new Entity("assets/Fireball.png");
+  const hudFireball = new Entity("assets/Fireball.png", 2);
   hudFireball.x = 160 - 6 + 2;
-  hudFireball.y = 120 + 2;
+  hudFireball.y = 140 + 2;
   const hudGameOver = new Entity("assets/Itisover.png");
   const tower = new Tower("assets/Tower.png");
   tower.x = (width - 32) / 2;
