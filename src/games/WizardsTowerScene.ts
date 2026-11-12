@@ -1,19 +1,21 @@
 import { LinearAnimation } from "../core/animation";
 import { Entity } from "../core/entity";
-import { attackTower, TowerEvent } from "../core/events";
+import { attackTower, TowerEvent } from "./WizardsTowerEvents";
 import { Scene } from "../engine/Scene";
 import { Timer } from "../core/timer";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
+import { Enemy } from "../core/Enemy";
+import { Projectile } from "../core/Projectile";
 
 interface GameState {
   phase: "ready" | "playing" | "gameover";
   elapsed: number;
-  enemies: Set<Entity>;
-  projectiles: Set<Entity>;
+  enemies: Set<Enemy>;
+  projectiles: Set<Projectile>;
   background: Set<Entity>;
   wizard: Entity;
-  tower: Entity;
+  tower: Enemy;
   events: TowerEvent[];
   animations: Set<LinearAnimation>;
   spawnTimer: number;
@@ -55,21 +57,30 @@ export class WizardsTowerScene implements Scene {
   }
 
   private updateTimers(dt: number): void {
+    if (this.state.phase !== "playing") return;
+
     this.state.spawnTimer -= dt;
     this.state.fireballTimer.advance(dt);
   }
 
   private updateEntities(dt: number): void {
-    for (const p of this.state.projectiles) {
+    const state = this.state;
+
+    for (const p of state.projectiles) {
       p.update(dt);
+      if (p.y > state.groundY) {
+        state.projectiles.delete(p);
+      }
     }
 
-    for (const e of this.state.enemies) {
-      e.update(dt);
-    }
-
-    for (const b of this.state.background) {
+    for (const b of state.background) {
       b.update(dt);
+    }
+
+    if (state.phase !== "playing") return;
+
+    for (const e of state.enemies) {
+      e.update(dt);
     }
   }
 
@@ -101,6 +112,8 @@ export class WizardsTowerScene implements Scene {
   }
 
   private spawnEnemies(_dt: number): void {
+    if (this.state.phase !== "playing") return;
+
     while (this.state.spawnTimer <= 0) {
       this.spawnOrk();
       this.state.spawnTimer += 3.0;
@@ -109,32 +122,15 @@ export class WizardsTowerScene implements Scene {
 
   private spawnOrk(): void {
     const state = this.state;
-    const ork: any = new Entity("assets/Ork.png", 2);
+    const ork = new Enemy("assets/Ork.png", 2);
     ork.x = 0;
     ork.y = state.groundY - 14;
     ork.vx = 30;
     ork.targetX = state.tower.x - 8 + 8 * Math.random() - 4;
-    ork.attackInterval = 1;
-    ork.attackStrength = 1;
-    ork.timeSinceLastAttack = 0;
-    ork.hp = 10;
-    ork.maxHp = 10;
+    ork.onAttack = (strength) => {
+      state.events.push(attackTower(strength));
+    };
 
-    ork.afterUpdateBehaviors.push((_dt: number, entity: any) => {
-      if (entity.x >= entity.targetX && entity.vx !== 0) {
-        entity.vx = 0;
-        entity.timeSinceLastAttack = 0;
-      }
-    });
-    ork.afterUpdateBehaviors.push((dt: number, entity: any) => {
-      if (entity.x >= entity.targetX) {
-        entity.timeSinceLastAttack += dt;
-        while (entity.timeSinceLastAttack >= entity.attackInterval) {
-          state.events.push(attackTower(entity.attackStrength));
-          entity.timeSinceLastAttack -= entity.attackInterval;
-        }
-      }
-    });
     state.enemies.add(ork);
 
     if (state.spawnCount === 0) {
@@ -146,6 +142,8 @@ export class WizardsTowerScene implements Scene {
 
   private handleCollisions() {
     const state = this.state;
+
+    if (state.phase !== "playing") return;
 
     for (const a of state.projectiles) {
       for (const b of state.enemies) {
@@ -163,6 +161,8 @@ export class WizardsTowerScene implements Scene {
   }
 
   private processEvents() {
+    if (this.state.phase !== "playing") return;
+
     while (this.state.events.length > 0) {
       const e = this.state.events.shift();
       if (e) {
@@ -174,7 +174,7 @@ export class WizardsTowerScene implements Scene {
   private processEvent(e: TowerEvent) {
     switch (e.type) {
       case "attackTower":
-        (this.state.tower as { hp: number }).hp -= e.strength;
+        this.state.tower.hp -= e.strength;
         this.state.tower.y += e.strength * 8;
         this.state.wizard.y += e.strength * 8;
 
@@ -190,7 +190,7 @@ export class WizardsTowerScene implements Scene {
   }
 
   private spawnFireball(destX: number, destY: number): boolean {
-    const fireball = new Entity("assets/Fireball.png");
+    const fireball = new Projectile("assets/Fireball.png");
     fireball.x = this.state.wizard.x + 8;
     fireball.y = this.state.wizard.y;
     fireball.w = 8;
@@ -202,7 +202,6 @@ export class WizardsTowerScene implements Scene {
 
     fireball.vx = 200 * (dx / len);
     fireball.vy = 200 * (dy / len);
-    fireball.strength = 1;
     this.state.projectiles.add(fireball);
     this.playVoice("spell");
     return true;
@@ -320,21 +319,19 @@ function initialize(width: number, height: number): GameState {
   hudFireball.x = 160 - 6 + 2;
   hudFireball.y = 120 + 2;
   const hudGameOver = new Entity("assets/Itisover.png");
-  const tower = new Entity("assets/Tower.png");
+  const tower = new Enemy("assets/Tower.png");
   tower.x = (width - 32) / 2;
   tower.y = (height - 128) / 2;
-  tower.hp = 10;
+  tower.showHp = false;
   const wizard = new Entity("assets/Wizard.png", 4);
   wizard.x = tower.x + 8;
   wizard.y = tower.y + 8;
-  // Wizard's hp prevent him from being de-spawned :P
-  wizard.hp = 1;
 
   const state = {
     phase: "ready" as "ready" | "playing" | "gameover",
     elapsed: 0,
-    enemies: new Set<Entity>(),
-    projectiles: new Set<Entity>(),
+    enemies: new Set<Enemy>(),
+    projectiles: new Set<Projectile>(),
     background: new Set<Entity>(),
     events: [],
     animations: new Set<LinearAnimation>(),
@@ -356,7 +353,6 @@ function initialize(width: number, height: number): GameState {
     const grass = new Entity("assets/Ground-1.png");
     grass.x = 16 * i;
     grass.y = state.groundY;
-    grass.hp = 1;
     state.background.add(grass);
   }
 
@@ -365,7 +361,6 @@ function initialize(width: number, height: number): GameState {
       const soil = new Entity("assets/Ground-2.png");
       soil.x = 16 * i;
       soil.y = y;
-      soil.hp = 1;
       state.background.add(soil);
     }
   }

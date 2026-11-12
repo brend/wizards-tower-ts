@@ -1,7 +1,6 @@
 import { loadImage } from "./assets";
 
 export class Entity {
-
   frameCount: number;
   x: number;
   y: number;
@@ -16,10 +15,6 @@ export class Entity {
   frameDuration: number;
   image: HTMLImageElement | null;
   afterUpdateBehaviors: Array<(dt: number, e: Entity) => void>;
-
-  hp: number | undefined;
-  maxHp: number | undefined;
-  strength: number | undefined;
 
   constructor(spritesheet: string, frameCount: number = 1) {
     if (frameCount < 1) throw new Error("frame count must be positive");
@@ -80,16 +75,6 @@ export class Entity {
       frameWidth,
       frameHeight,
     );
-
-    if (this.hp !== undefined && this.maxHp !== undefined) {
-      context.lineWidth = 0.5;
-      context.strokeStyle = "red";
-      context.strokeRect(this.x, this.y + 16, 16, 4);
-      if (this.hp > 0) {
-        context.fillStyle = "red";
-        context.fillRect(this.x, this.y + 16, 16 * (this.hp / this.maxHp), 4);
-      }
-    }
   }
 
   update(dt: number) {

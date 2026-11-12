@@ -1,9 +1,9 @@
 export interface TowerEvent {
-  type: string;
+  type: "attackTower";
   strength: number;
 }
 
-export function attackTower(strength: number) {
+export function attackTower(strength: number): TowerEvent {
   return {
     type: "attackTower",
     strength,
