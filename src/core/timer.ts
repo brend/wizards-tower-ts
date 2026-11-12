@@ -1,13 +1,10 @@
 export class Timer {
-
   interval: number;
   remaining: number;
 
   constructor(interval: number) {
-    const n = Number(interval);
-    if (isNaN(n)) throw new Error("Timer interval must be a number");
-    this.interval = n;
-    this.remaining = n;
+    this.interval = interval;
+    this.remaining = interval;
   }
 
   advance(dt: number) {
@@ -23,7 +20,11 @@ export class Timer {
     return f < 0 ? 0 : f;
   }
 
-  reset() {
+  reset(): void {
     this.remaining = this.interval;
+  }
+
+  complete(): void {
+    this.remaining = 0;
   }
 }

@@ -2,11 +2,11 @@ import { LinearAnimation } from "../core/animation";
 import { Entity } from "../core/entity";
 import { attackTower, TowerEvent } from "./WizardsTowerEvents";
 import { Scene } from "../engine/Scene";
-import { Timer } from "../core/timer";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
 import { Enemy, Tower } from "./WizardsTowerEntities";
+import { Timer } from "../core/timer";
 
 interface GameState {
   phase: "ready" | "playing" | "gameover";
@@ -154,6 +154,7 @@ export class WizardsTowerScene implements Scene {
     for (const enemy of state.enemies) {
       if (enemy.hp !== undefined && enemy.hp <= 0) {
         state.enemies.delete(enemy);
+        state.fireballTimer.complete();
       }
     }
   }
