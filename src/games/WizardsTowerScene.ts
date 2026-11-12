@@ -5,9 +5,8 @@ import { Scene } from "../engine/Scene";
 import { Timer } from "../core/timer";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
-import { Enemy } from "../core/Enemy";
 import { Projectile } from "../core/Projectile";
-import { Tower } from "./WizardsTowerEntities";
+import { Enemy, Tower } from "./WizardsTowerEntities";
 
 interface GameState {
   phase: "ready" | "playing" | "gameover";
@@ -69,7 +68,7 @@ export class WizardsTowerScene implements Scene {
 
     for (const p of state.projectiles) {
       p.update(dt);
-      if (p.y > state.groundY) {
+      if (p.x < -8 || p.x > this.width || p.y < -8 || p.y > this.height) {
         state.projectiles.delete(p);
       }
     }
