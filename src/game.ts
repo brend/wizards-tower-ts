@@ -25,8 +25,7 @@ export interface GameState {
 }
 
 export class Game {
-
-  constants: { width: number; height: number; showFps: boolean; zoom: number; };
+  constants: { width: number; height: number; showFps: boolean; zoom: number };
   frameId: number | null;
   previousTime: number | null;
   sampleTime: number;
@@ -37,7 +36,14 @@ export class Game {
   voices: VoicePlayer;
   state: GameState;
 
-  constructor(width: number, height: number, showFps = true, title = "My Game", zoom = 1) {
+  constructor(
+    width: number,
+    height: number,
+    initialize: (width: number, height: number) => GameState,
+    showFps = true,
+    title = "My Game",
+    zoom = 1,
+  ) {
     this.constants = { width, height, showFps, zoom };
     this.frameId = null;
     this.previousTime = null;
@@ -50,7 +56,7 @@ export class Game {
     this.viewport = generateCanvas(width, height, zoom);
     this.viewport.id = "gameViewport";
     this.viewport.setAttribute("aria-label", title);
-    const context = this.viewport.getContext("2d"); 
+    const context = this.viewport.getContext("2d");
     if (!context) throw Error("Could not create rendering context");
     this.context = context;
     const container = document.getElementById("container");
@@ -59,7 +65,7 @@ export class Game {
     container.appendChild(this.viewport);
 
     this.voices = this.loadVoices();
-    this.state = this.initialize();
+    this.state = initialize(width, height);
     this.hookupControls();
   }
 
@@ -74,76 +80,16 @@ export class Game {
     });
   }
 
-  initialize(): GameState {
-    const { width, height } = this.constants;
-
-    const hudFireball = new Entity("assets/Fireball.png");
-    hudFireball.x = 160 - 6 + 2;
-    hudFireball.y = 120 + 2;
-    const hudGameOver = new Entity("assets/Itisover.png");
-    const tower = new Entity("assets/Tower.png");
-    tower.x = (width - 32) / 2;
-    tower.y = (height - 128) / 2;
-    tower.hp = 10;
-    const wizard = new Entity("assets/Wizard.png", 4);
-    wizard.x = tower.x + 8;
-    wizard.y = tower.y + 8;
-    // Wizard's hp prevent him from being de-spawned :P
-    wizard.hp = 1;
-
-    const state = {
-      phase : "ready",
-      elapsed : 0,
-      enemies : new Set<Entity>(),
-      projectiles : new Set<Entity>(),
-      background : new Set<Entity>(),
-      events : [],
-      animations : new Set<LinearAnimation>(),
-      spawnTimer : 3.0,
-      spawnCount : 0,
-      fireballTimer : new Timer(5),
-      hudFireball,
-      hudFireballGray: undefined,
-      hudGameOver,
-      wizard,
-      tower,
-      groundY: tower.y + 78,
-    };
-
-    state.background.add(wizard);
-    state.background.add(tower);
-    
-    for (let i = 0; i < Math.ceil(width / 16); ++i) {
-      const grass = new Entity("assets/Ground-1.png");
-      grass.x = 16 * i;
-      grass.y = state.groundY;
-      grass.hp = 1;
-      state.background.add(grass);
-    }
-
-    for (let y = state.groundY + 16; y < height; y += 16) {
-      for (let i = 0; i < Math.ceil(width / 16); ++i) {
-        const soil = new Entity("assets/Ground-2.png");
-        soil.x = 16 * i;
-        soil.y = y;
-        soil.hp = 1;
-        state.background.add(soil);
-      }
-    }
-    
-    return state;
-  }
-
   hookupControls() {
-
     function ge(id: string): any {
       const element = document.getElementById(id);
       if (!element) throw new Error(`Could not find HTML element '${id}'`);
       return element;
     }
-    
+
     const startButton = ge("start-button");
-    if (!startButton) throw new Error("Could not find HTML element 'start-button'");
+    if (!startButton)
+      throw new Error("Could not find HTML element 'start-button'");
     startButton.addEventListener("click", async () => {
       if (this.state.phase !== "ready" || startButton.disabled) return;
       startButton.disabled = true;
@@ -396,7 +342,11 @@ export class Game {
       const endAngle = startAngle + Math.PI * 2;
       const sweepAngle = startAngle + Math.PI * 2 * (1 - remaining);
 
-      const drawSector = (image: CanvasImageSource, from: number, to: number) => {
+      const drawSector = (
+        image: CanvasImageSource,
+        from: number,
+        to: number,
+      ) => {
         context.save();
         context.beginPath();
         context.moveTo(centerX, centerY);
@@ -437,7 +387,7 @@ export class Game {
   processEvent(e: TowerEvent) {
     switch (e.type) {
       case "attackTower":
-        (this.state.tower as { hp: number; }).hp -= e.strength;
+        (this.state.tower as { hp: number }).hp -= e.strength;
         this.state.tower.y += e.strength * 8;
         this.state.wizard.y += e.strength * 8;
 
@@ -510,4 +460,3 @@ export class Game {
     });
   }
 }
-
