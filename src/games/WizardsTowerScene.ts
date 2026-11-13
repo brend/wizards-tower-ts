@@ -1,4 +1,3 @@
-import { LinearAnimation } from "../core/animation";
 import { Entity } from "../core/entity";
 import { attackTower, TowerEvent } from "./WizardsTowerEvents";
 import { Scene } from "../engine/Scene";
@@ -6,7 +5,7 @@ import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
 import { Enemy, Tower } from "./WizardsTowerEntities";
-import { Timer } from "../core/timer";
+import { Timer } from "../core/Timer";
 
 interface GameState {
   phase: "ready" | "playing" | "gameover";
@@ -14,10 +13,10 @@ interface GameState {
   enemies: Set<Enemy>;
   projectiles: Set<Projectile>;
   background: Set<Entity>;
+  effects: Set<Entity>;
   wizard: Entity;
   tower: Tower;
   events: TowerEvent[];
-  animations: Set<LinearAnimation>;
   spawnTimer: number;
   spawnCount: number;
   fireballTimer: Timer;
@@ -48,7 +47,6 @@ export class WizardsTowerScene implements Scene {
     this.updateEntities(dt);
     this.handleCollisions();
     this.processEvents();
-    this.updateAnimations(dt);
     this.checkGameOver();
 
     if (phaseEnteringUpdate !== "gameover" && this.state.phase === "gameover") {
@@ -77,27 +75,19 @@ export class WizardsTowerScene implements Scene {
       b.update(dt);
     }
 
+    for (const e of state.effects) {
+      e.update(dt);
+
+      if (e.x < -8 || e.x > this.width + 8 || e.y < -8 || e.y > this.height + 8) {
+        console.log("gotta remove this thing");
+        state.effects.delete(e);
+      }
+    }
+
     if (state.phase !== "playing") return;
 
     for (const e of state.enemies) {
       e.update(dt);
-    }
-  }
-
-  private updateAnimations(dt: number): void {
-    const done = [];
-
-    for (const a of this.state.animations) {
-      a.update(dt);
-
-      if (a.done) {
-        done.push(a);
-      }
-    }
-
-    for (const a of done) {
-      a.onComplete?.();
-      this.state.animations.delete(a);
     }
   }
 
@@ -178,13 +168,11 @@ export class WizardsTowerScene implements Scene {
         this.state.wizard.y += e.strength * 8;
 
         const effect = new Entity("assets/Ouch.png");
-        effect.x = this.state.tower.x - 4;
-        effect.y = this.state.groundY - 30;
+        effect.x = this.state.wizard.x + 4;
+        effect.y = this.state.wizard.y - 16;
         effect.vx = Math.random() * 24 - 12;
-        this.state.background.add(effect);
-        const animation = new LinearAnimation(effect, -8, -64, 2.0);
-        animation.onComplete = () => this.state.background.delete(effect);
-        this.state.animations.add(animation);
+        effect.vy = -50;
+        this.state.effects.add(effect);
     }
   }
 
@@ -231,6 +219,10 @@ export class WizardsTowerScene implements Scene {
 
     for (const p of this.state.projectiles) {
       p.render(ctx);
+    }
+
+    for (const e of this.state.effects) {
+      e.render(ctx);
     }
   }
 
@@ -331,8 +323,8 @@ function initialize(width: number, height: number): GameState {
     enemies: new Set<Enemy>(),
     projectiles: new Set<Projectile>(),
     background: new Set<Entity>(),
+    effects: new Set<Entity>(),
     events: [],
-    animations: new Set<LinearAnimation>(),
     spawnTimer: 3.0,
     spawnCount: 0,
     fireballTimer: new Timer(3),
