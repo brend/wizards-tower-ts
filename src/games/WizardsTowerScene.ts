@@ -1,4 +1,4 @@
-import { Entity } from "../core/entity";
+import { Entity } from "../core/Entity";
 import { attackTower, TowerEvent } from "./WizardsTowerEvents";
 import { Scene } from "../engine/Scene";
 import { createGrayscaleImage } from "../utils/utils.canvas";
