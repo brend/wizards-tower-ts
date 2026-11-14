@@ -73,38 +73,29 @@ export class WizardsTowerScene implements Scene {
   }
 
   update(dt: number): void {
-    switch (this.phase) {
-      case "ready":
-      case "playing":
-      case "gameover":
-        this.updateInGame(dt);
-        break;
-      case "levelup":
-        break;
-    }
-  }
+    if (this.phase === "levelup") return;
 
-  private updateInGame(dt: number): void {
-    const phaseEnteringUpdate = this.phase;
+    this.updateVisuals(dt);
+
+    if (this.phase !== "playing") return;
 
     this.updateTimers(dt);
-    this.spawnEnemies(dt);
-    this.spawnMinions(dt);
-    this.updateEntities(dt);
+    this.spawnEnemies();
+    this.spawnMinions();
+    this.updateCombatants(dt);
     this.handleCollisions();
     this.updateCombat(dt);
     this.cleanupCorpses();
-    this.checkLevelUp();
-    this.checkGameOver();
 
-    if (phaseEnteringUpdate !== "gameover" && this.phase === "gameover") {
+    if (this.tower.hp <= 0) {
+      this.phase = "gameover";
       this.playVoice("itsover");
+    } else if (this.xp >= 10) {
+      this.phase = "levelup";
     }
   }
 
   private updateTimers(dt: number): void {
-    if (this.phase !== "playing") return;
-
     this.spawnTimer -= dt;
     this.fireballTimer.advance(dt);
     if (this.minionTimer) {
@@ -112,7 +103,7 @@ export class WizardsTowerScene implements Scene {
     }
   }
 
-  private updateEntities(dt: number): void {
+  private updateVisuals(dt: number): void {
     for (const p of this.projectiles) {
       p.update(dt);
       if (p.x < -8 || p.x > this.width || p.y < -8 || p.y > this.height) {
@@ -137,9 +128,9 @@ export class WizardsTowerScene implements Scene {
         this.effects.delete(e);
       }
     }
+  }
 
-    if (this.phase !== "playing") return;
-
+  private updateCombatants(dt: number): void {
     for (const m of this.minions) {
       m.update(dt);
     }
@@ -149,32 +140,14 @@ export class WizardsTowerScene implements Scene {
     }
   }
 
-  private checkGameOver(): void {
-    if (this.phase !== "playing") return;
-
-    if (this.tower.hp <= 0) {
-      this.phase = "gameover";
-    }
-  }
-
-  private checkLevelUp(): void {
-    if (this.phase !== "playing") return;
-
-    if (this.xp >= 10) {
-      this.phase = "levelup";
-    }
-  }
-
-  private spawnEnemies(_dt: number): void {
-    if (this.phase !== "playing") return;
-
+  private spawnEnemies(): void {
     while (this.spawnTimer <= 0) {
       this.spawnOrk();
       this.spawnTimer += 3.0;
     }
   }
 
-  private spawnMinions(_dt: number): void {
+  private spawnMinions(): void {
     if (!(this.minionTimer && this.minionTimer.isOver)) return;
     this.spawnMinion();
     this.minionTimer.reset();
@@ -202,51 +175,45 @@ export class WizardsTowerScene implements Scene {
   }
 
   private handleCollisions() {
-    if (this.phase !== "playing") return;
+    this.handleProjectileCollisions();
+    this.handleCombatTargetSelection();
+  }
 
-    for (const a of this.projectiles) {
-      for (const b of this.enemies) {
-        if (b.hp === undefined || a.strength === undefined) continue;
-        if (!a.intersectsWith(b)) continue;
-        b.hp -= a.strength;
+  private handleCombatTargetSelection(): void {
+    for (const e of this.enemies) {
+      if (e.hp <= 0) continue;
+
+      for (const m of this.minions) {
+        if (m.hp <= 0 || !e.intersectsWith(m)) continue;
+
+        if (!e.target || e.target === this.tower) {
+          e.setTarget(m);
+        }
+
+        if (!m.target) {
+          m.setTarget(e);
+        }
       }
     }
 
     for (const e of this.enemies) {
-      if (e.hp <= 0) continue;
-      if (!e.target || e.target === this.tower) {
-        for (const m of this.minions) {
-          if (e.intersectsWith(m)) {
-            e.setTarget(m);
-            if (!m.target) {
-              m.setTarget(e);
-            }
-            continue;
-          }
-        }
-      }
-
-      if (!e.target && e.x >= this.tower.x - 8) {
+      if (e.hp <= 0 || e.target) continue;
+      if (e.x >= this.tower.x - 8) {
         e.setTarget(this.tower);
       }
     }
+  }
 
-    for (const m of this.minions) {
-      if (m.target) continue;
-      for (const e of this.enemies) {
-        if (e.hp > 0 && m.intersectsWith(e)) {
-          m.setTarget(e);
-          if (!e.target || e.target === this.tower) {
-            e.setTarget(m);
-          }
-          break;
-        }
+  private handleProjectileCollisions(): void {
+    for (const a of this.projectiles) {
+      for (const b of this.enemies) {
+        if (!a.intersectsWith(b)) continue;
+        b.takeDamage(a.strength);
       }
     }
   }
 
   private updateCombat(dt: number): void {
-    if (this.phase !== "playing") return;
     for (const e of this.enemies) {
       e.updateCombat(dt);
     }
@@ -256,7 +223,6 @@ export class WizardsTowerScene implements Scene {
   }
 
   private cleanupCorpses(): void {
-    if (this.phase !== "playing") return;
     for (const e of this.enemies) {
       if (e.hp <= 0) {
         this.enemies.delete(e);
@@ -370,7 +336,7 @@ export class WizardsTowerScene implements Scene {
   }
 
   private renderInGameHud(ctx: CanvasRenderingContext2D): void {
-    const { hudFireball, fireballTimer, tower } = this;
+    const { hudFireball, fireballTimer } = this;
     if (!hudFireball.ready) return;
 
     const hudX = hudFireball.x;

@@ -14,7 +14,6 @@ export class Entity {
   frameTime: number;
   frameDuration: number;
   image: HTMLImageElement | null;
-  afterUpdateBehaviors: Array<(dt: number, e: Entity) => void>;
 
   constructor(spritesheet: string, frameCount: number = 1) {
     if (frameCount < 1) throw new Error("frame count must be positive");
@@ -26,7 +25,6 @@ export class Entity {
     this.h = 16;
     this.vx = 0;
     this.vy = 0;
-    this.ready = false;
     this.frame = 0;
     this.frameTime = 0;
     const animationFps = 7;
@@ -34,8 +32,6 @@ export class Entity {
 
     this.image = null;
     this.ready = false;
-
-    this.afterUpdateBehaviors = [];
 
     loadImage(spritesheet)
       .then((image) => {
@@ -53,22 +49,6 @@ export class Entity {
   get height(): number {
     if (!this.ready) return NaN;
     return this.image!.height;
-  }
-
-  get left(): number {
-    return this.x;
-  }
-
-  get right(): number {
-    return this.x + this.width;
-  }
-
-  get top(): number {
-    return this.y;
-  }
-
-  get bottom(): number {
-    return this.y + this.height;
   }
 
   render(context: CanvasRenderingContext2D) {
@@ -101,10 +81,6 @@ export class Entity {
     while (this.frameTime >= this.frameDuration) {
       this.frameTime -= this.frameDuration;
       this.frame = (this.frame + 1) % this.frameCount;
-    }
-
-    for (const action of this.afterUpdateBehaviors) {
-      action(dt, this);
     }
   }
 
