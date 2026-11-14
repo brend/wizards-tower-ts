@@ -1,6 +1,6 @@
 import { Engine } from "../engine/Engine";
 import { VoicePlayer } from "../engine/VoicePlayer";
-import { WizardsTowerScene } from "./WizardsTowerScene";
+import { WizardsTowerScene } from "./Scene";
 
 export function bindWizardsTowerControls(
   engine: Engine,

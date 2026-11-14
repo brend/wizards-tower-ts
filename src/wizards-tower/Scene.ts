@@ -1,14 +1,14 @@
 import { Entity } from "../core/Entity";
-import { attackTower, TowerEvent } from "./WizardsTowerEvents";
+import { attackTower, TowerEvent } from "./Events";
 import { Scene } from "../engine/Scene";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
-import { Enemy, Tower } from "./WizardsTowerEntities";
+import { Enemy, Tower, Upgrade } from "./Entities";
 import { Timer } from "../core/Timer";
 
 interface GameState {
-  phase: "ready" | "playing" | "gameover";
+  phase: "ready" | "playing" | "levelup" | "gameover";
   elapsed: number;
   enemies: Set<Enemy>;
   projectiles: Set<Projectile>;
@@ -24,6 +24,7 @@ interface GameState {
   hudFireballGray: HTMLCanvasElement | undefined;
   hudGameOver: Entity;
   groundY: number;
+  upgrades: Upgrade[];
 }
 
 export class WizardsTowerScene implements Scene {
@@ -40,6 +41,18 @@ export class WizardsTowerScene implements Scene {
   }
 
   update(dt: number): void {
+    switch (this.state.phase) {
+      case "ready":
+      case "playing":
+      case "gameover":
+        this.updateInGame(dt);
+        break;
+      case "levelup":
+        break;
+    }
+  }
+
+  private updateInGame(dt: number): void {
     const phaseEnteringUpdate = this.state.phase;
 
     this.updateTimers(dt);
@@ -47,6 +60,7 @@ export class WizardsTowerScene implements Scene {
     this.updateEntities(dt);
     this.handleCollisions();
     this.processEvents();
+    this.checkLevelUp();
     this.checkGameOver();
 
     if (phaseEnteringUpdate !== "gameover" && this.state.phase === "gameover") {
@@ -78,7 +92,12 @@ export class WizardsTowerScene implements Scene {
     for (const e of state.effects) {
       e.update(dt);
 
-      if (e.x < -8 || e.x > this.width + 8 || e.y < -8 || e.y > this.height + 8) {
+      if (
+        e.x < -8 ||
+        e.x > this.width + 8 ||
+        e.y < -8 ||
+        e.y > this.height + 8
+      ) {
         console.log("gotta remove this thing");
         state.effects.delete(e);
       }
@@ -96,6 +115,14 @@ export class WizardsTowerScene implements Scene {
 
     if (this.state.tower.hp <= 0) {
       this.state.phase = "gameover";
+    }
+  }
+
+  private checkLevelUp(): void {
+    if (this.state.phase !== "playing") return;
+
+    if (this.state.tower.xp >= 10) {
+      this.state.phase = "levelup";
     }
   }
 
@@ -145,6 +172,7 @@ export class WizardsTowerScene implements Scene {
       if (enemy.hp !== undefined && enemy.hp <= 0) {
         state.enemies.delete(enemy);
         state.fireballTimer.complete();
+        state.tower.xp += 1;
       }
     }
   }
@@ -177,6 +205,9 @@ export class WizardsTowerScene implements Scene {
   }
 
   private spawnFireball(destX: number, destY: number): boolean {
+    // Debug
+    this.state.tower.xp = 10;
+
     const fireball = new Projectile("assets/Fireball.png", 2);
     fireball.x = this.state.wizard.x + 8;
     fireball.y = this.state.wizard.y;
@@ -227,8 +258,41 @@ export class WizardsTowerScene implements Scene {
   }
 
   private renderHud(ctx: CanvasRenderingContext2D): void {
-    const { hudFireball, fireballTimer } = this.state;
+    switch (this.state.phase) {
+      case "playing":
+        this.renderInGameHud(ctx);
+        break;
+      case "levelup":
+        this.renderLevelUpHud(ctx);
+        break;
+      case "gameover":
+        this.renderGameOverHud(ctx);
+        break;
+    }
+  }
+
+  private renderLevelUpHud(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    for (const upgrade of this.state.upgrades) {
+      upgrade.render(ctx);
+    }
+  }
+
+  private renderGameOverHud(ctx: CanvasRenderingContext2D): void {
+    // Render game over message
+    if (this.state.phase === "gameover" && this.state.hudGameOver.ready) {
+      this.state.hudGameOver.render(ctx);
+    }
+  }
+
+  private renderInGameHud(ctx: CanvasRenderingContext2D): void {
+    const { hudFireball, fireballTimer, tower } = this.state;
     if (!hudFireball.ready) return;
+
+    const hudX = hudFireball.x;
+    const hudY = hudFireball.y;
 
     const remaining = Math.min(1, Math.max(0, fireballTimer.remainingFraction));
     if (remaining === 0) {
@@ -277,20 +341,32 @@ export class WizardsTowerScene implements Scene {
       drawSector(this.state.hudFireballGray!, sweepAngle, endAngle);
     }
 
-    // Render game over message
-    if (this.state.phase === "gameover" && this.state.hudGameOver.ready) {
-      this.state.hudGameOver.render(ctx);
-    }
+    // Render mana gauge
+    this.drawText(ctx, String(tower.xp), hudX, hudY + 20);
+  }
+
+  drawText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+  ): void {
+    ctx.font = "8px sans-serif";
+    ctx.fillStyle = "rgb(177, 177, 41)";
+    ctx.fillText(text, x, y);
   }
 
   onPointerDown?(x: number, y: number): void {
-    if (this.state.phase !== "playing") return;
-
-    const timer = this.state.fireballTimer;
-
-    if (!timer.isOver) return;
-
-    if (this.spawnFireball(x, y)) timer.reset();
+    switch (this.state.phase) {
+      case "playing":
+        const timer = this.state.fireballTimer;
+        if (!timer.isOver) return;
+        if (this.spawnFireball(x, y)) timer.reset();
+        break;
+      case "levelup":
+        console.log("you chose an upgrade");
+        break;
+    }
   }
 
   begin(): void {
@@ -307,8 +383,8 @@ export class WizardsTowerScene implements Scene {
 
 function initialize(width: number, height: number): GameState {
   const hudFireball = new Entity("assets/Fireball.png", 2);
-  hudFireball.x = 160 - 6 + 2;
-  hudFireball.y = 140 + 2;
+  hudFireball.x = 300 - 6 + 2;
+  hudFireball.y = 40 + 2;
   const hudGameOver = new Entity("assets/Itisover.png");
   const tower = new Tower("assets/Tower.png");
   tower.x = (width - 32) / 2;
@@ -316,6 +392,14 @@ function initialize(width: number, height: number): GameState {
   const wizard = new Entity("assets/Wizard.png", 4);
   wizard.x = tower.x + 8;
   wizard.y = tower.y + 8;
+
+  // Keep upgrades alive across frames so their asynchronous image loads can finish.
+  const upgrades = [100, 150, 200].map((x) => {
+    const upgrade = new Upgrade("fireball", "assets/Fireball.png", 2);
+    upgrade.x = x;
+    upgrade.y = 60;
+    return upgrade;
+  });
 
   const state = {
     phase: "ready" as "ready" | "playing" | "gameover",
@@ -334,6 +418,7 @@ function initialize(width: number, height: number): GameState {
     wizard,
     tower,
     groundY: 120,
+    upgrades,
   };
 
   state.background.add(wizard);

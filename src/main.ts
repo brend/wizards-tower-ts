@@ -1,6 +1,6 @@
 import { Engine } from "./engine/Engine";
-import { WizardsTowerScene } from "./games/WizardsTowerScene";
-import { bindWizardsTowerControls } from "./games/WizardsTowerControls";
+import { WizardsTowerScene } from "./wizards-tower/Scene";
+import { bindWizardsTowerControls } from "./wizards-tower/Controls";
 import { VoicePlayer } from "./engine/VoicePlayer";
 
 const voices = new VoicePlayer({

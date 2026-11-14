@@ -2,6 +2,18 @@ import { Entity } from "../core/Entity";
 
 export class Tower extends Entity {
   hp = 10;
+  xp = 0;
+}
+
+type UpgradeKind = "fireball" | "skeleton" | "tower";
+
+export class Upgrade extends Entity {
+  kind: UpgradeKind;
+
+  constructor(kind: UpgradeKind, spritesheet: string, frameCount = 1) {
+    super(spritesheet, frameCount);
+    this.kind = kind;
+  }
 }
 
 export class Enemy extends Entity {
