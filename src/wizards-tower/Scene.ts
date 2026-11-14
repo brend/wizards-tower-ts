@@ -26,6 +26,7 @@ export class WizardsTowerScene implements Scene {
   private readonly wizard = new Entity("assets/Wizard.png", 4);
   private readonly groundY = 120;
   private readonly upgrades: Upgrade[];
+  private xp = 0;
   width: number;
   height: number;
   voices: VoicePlayer;
@@ -159,7 +160,7 @@ export class WizardsTowerScene implements Scene {
   private checkLevelUp(): void {
     if (this.phase !== "playing") return;
 
-    if (this.tower.xp >= 10) {
+    if (this.xp >= 10) {
       this.phase = "levelup";
     }
   }
@@ -259,6 +260,7 @@ export class WizardsTowerScene implements Scene {
     for (const e of this.enemies) {
       if (e.hp <= 0) {
         this.enemies.delete(e);
+        this.xp += 1;
       } else if (e.target && e.target.hp <= 0) {
         e.setTarget(null);
       }
@@ -422,7 +424,7 @@ export class WizardsTowerScene implements Scene {
     }
 
     // Render mana gauge
-    this.drawText(ctx, String(tower.xp), hudX, hudY + 20);
+    this.drawText(ctx, String(this.xp), hudX, hudY + 20);
   }
 
   drawText(

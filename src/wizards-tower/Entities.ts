@@ -20,7 +20,6 @@ interface Damageable {
 
 export class Tower extends Entity implements Damageable {
   hp = 10;
-  xp = 0;
   onDamaged?: (amount: number) => void;
 
   takeDamage(amount: number): void {
