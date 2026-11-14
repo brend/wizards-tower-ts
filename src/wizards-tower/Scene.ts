@@ -1,10 +1,9 @@
 import { Entity } from "../core/Entity";
-import { attackTower, TowerEvent } from "./Events";
 import { Scene } from "../engine/Scene";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
-import { Enemy, Tower, Upgrade } from "./Entities";
+import { Enemy, Minion, Tower, Upgrade } from "./Entities";
 import { Timer } from "../core/Timer";
 
 type GamePhase = "ready" | "playing" | "levelup" | "gameover";
@@ -12,13 +11,14 @@ type GamePhase = "ready" | "playing" | "levelup" | "gameover";
 export class WizardsTowerScene implements Scene {
   private phase: GamePhase = "ready";
   private readonly enemies = new Set<Enemy>();
+  private readonly minions = new Set<Minion>();
   private readonly projectiles = new Set<Projectile>();
   private readonly background = new Set<Entity>();
   private readonly effects = new Set<Entity>();
-  private readonly events: TowerEvent[] = [];
   private spawnTimer = 3.0;
   private spawnCount = 0;
   private readonly fireballTimer = new Timer(3);
+  private minionTimer: Timer | undefined = new Timer(6);
   private readonly hudFireball = new Entity("assets/Fireball.png", 2);
   private hudFireballGray: HTMLCanvasElement | undefined;
   private readonly hudGameOver = new Entity("assets/Itisover.png");
@@ -39,6 +39,7 @@ export class WizardsTowerScene implements Scene {
     this.hudFireball.y = 40 + 2;
     this.tower.x = (width - 32) / 2;
     this.tower.y = 16;
+    this.tower.onDamaged = (amount) => this.showTowerDamage(amount);
     this.wizard.x = this.tower.x + 8;
     this.wizard.y = this.tower.y + 8;
 
@@ -87,9 +88,11 @@ export class WizardsTowerScene implements Scene {
 
     this.updateTimers(dt);
     this.spawnEnemies(dt);
+    this.spawnMinions(dt);
     this.updateEntities(dt);
     this.handleCollisions();
-    this.processEvents();
+    this.updateCombat(dt);
+    this.cleanupCorpses();
     this.checkLevelUp();
     this.checkGameOver();
 
@@ -103,6 +106,9 @@ export class WizardsTowerScene implements Scene {
 
     this.spawnTimer -= dt;
     this.fireballTimer.advance(dt);
+    if (this.minionTimer) {
+      this.minionTimer.advance(dt);
+    }
   }
 
   private updateEntities(dt: number): void {
@@ -132,6 +138,10 @@ export class WizardsTowerScene implements Scene {
     }
 
     if (this.phase !== "playing") return;
+
+    for (const m of this.minions) {
+      m.update(dt);
+    }
 
     for (const e of this.enemies) {
       e.update(dt);
@@ -163,15 +173,16 @@ export class WizardsTowerScene implements Scene {
     }
   }
 
+  private spawnMinions(_dt: number): void {
+    if (!(this.minionTimer && this.minionTimer.isOver)) return;
+    this.spawnMinion();
+    this.minionTimer.reset();
+  }
+
   private spawnOrk(): void {
     const ork = new Enemy("assets/Ork.png", 2);
     ork.x = 0;
     ork.y = this.groundY - 14;
-    ork.vx = 30;
-    ork.targetX = this.tower.x - 8 + 8 * Math.random() - 4;
-    ork.onAttack = (strength) => {
-      this.events.push(attackTower(strength));
-    };
 
     this.enemies.add(ork);
 
@@ -180,6 +191,13 @@ export class WizardsTowerScene implements Scene {
     }
 
     this.spawnCount += 1;
+  }
+
+  private spawnMinion(): void {
+    const minion = new Minion("assets/Skeleton.png");
+    minion.x = this.tower.x;
+    minion.y = this.groundY - 14;
+    this.minions.add(minion);
   }
 
   private handleCollisions() {
@@ -193,46 +211,79 @@ export class WizardsTowerScene implements Scene {
       }
     }
 
-    for (const enemy of this.enemies) {
-      if (enemy.hp !== undefined && enemy.hp <= 0) {
-        this.enemies.delete(enemy);
-        this.fireballTimer.complete();
-        this.tower.xp += 1;
+    for (const e of this.enemies) {
+      if (e.hp <= 0) continue;
+      if (!e.target || e.target === this.tower) {
+        for (const m of this.minions) {
+          if (e.intersectsWith(m)) {
+            e.setTarget(m);
+            if (!m.target) {
+              m.setTarget(e);
+            }
+            continue;
+          }
+        }
+      }
+
+      if (!e.target && e.x >= this.tower.x - 8) {
+        e.setTarget(this.tower);
+      }
+    }
+
+    for (const m of this.minions) {
+      if (m.target) continue;
+      for (const e of this.enemies) {
+        if (e.hp > 0 && m.intersectsWith(e)) {
+          m.setTarget(e);
+          if (!e.target || e.target === this.tower) {
+            e.setTarget(m);
+          }
+          break;
+        }
       }
     }
   }
 
-  private processEvents() {
+  private updateCombat(dt: number): void {
     if (this.phase !== "playing") return;
+    for (const e of this.enemies) {
+      e.updateCombat(dt);
+    }
+    for (const m of this.minions) {
+      m.updateCombat(dt);
+    }
+  }
 
-    while (this.events.length > 0) {
-      const e = this.events.shift();
-      if (e) {
-        this.processEvent(e);
+  private cleanupCorpses(): void {
+    if (this.phase !== "playing") return;
+    for (const e of this.enemies) {
+      if (e.hp <= 0) {
+        this.enemies.delete(e);
+      } else if (e.target && e.target.hp <= 0) {
+        e.setTarget(null);
+      }
+    }
+    for (const m of this.minions) {
+      if (m.hp <= 0) {
+        this.minions.delete(m);
+      } else if (m.target && m.target.hp <= 0) {
+        m.setTarget(null);
       }
     }
   }
 
-  private processEvent(e: TowerEvent) {
-    switch (e.type) {
-      case "attackTower":
-        this.tower.hp -= e.strength;
-        this.tower.y += e.strength * 8;
-        this.wizard.y += e.strength * 8;
-
-        const effect = new Entity("assets/Ouch.png");
-        effect.x = this.wizard.x + 4;
-        effect.y = this.wizard.y - 16;
-        effect.vx = Math.random() * 24 - 12;
-        effect.vy = -50;
-        this.effects.add(effect);
-    }
+  private showTowerDamage(amount: number): void {
+    const effect = new Entity("assets/Ouch.png");
+    effect.x = this.wizard.x + 4;
+    effect.y = this.wizard.y - 16;
+    effect.vx = Math.random() * 24 - 12;
+    effect.vy = -50;
+    this.effects.add(effect);
+    this.tower.y += amount * 8;
+    this.wizard.y += amount * 8;
   }
 
   private spawnFireball(destX: number, destY: number): boolean {
-    // Debug
-    this.tower.xp = 10;
-
     const fireball = new Projectile("assets/Fireball.png", 2);
     fireball.x = this.wizard.x + 8;
     fireball.y = this.wizard.y;
@@ -271,6 +322,10 @@ export class WizardsTowerScene implements Scene {
   private renderEntities(ctx: CanvasRenderingContext2D): void {
     for (const e of this.enemies) {
       e.render(ctx);
+    }
+
+    for (const m of this.minions) {
+      m.render(ctx);
     }
 
     for (const p of this.projectiles) {

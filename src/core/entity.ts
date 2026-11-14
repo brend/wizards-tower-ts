@@ -55,6 +55,22 @@ export class Entity {
     return this.image!.height;
   }
 
+  get left(): number {
+    return this.x;
+  }
+
+  get right(): number {
+    return this.x + this.width;
+  }
+
+  get top(): number {
+    return this.y;
+  }
+
+  get bottom(): number {
+    return this.y + this.height;
+  }
+
   render(context: CanvasRenderingContext2D) {
     if (!context) throw new Error("argument 'context' is required");
     if (!this.ready) return;
