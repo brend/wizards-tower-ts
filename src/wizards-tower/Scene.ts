@@ -1,10 +1,10 @@
-import { Entity } from "../core/Entity";
+import { Entity } from "../core/entity";
 import { Scene } from "../engine/Scene";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
 import { Enemy, Minion, Tower, Upgrade } from "./Entities";
-import { Timer } from "../core/Timer";
+import { Timer } from "../core/timer";
 
 type GamePhase = "ready" | "playing" | "levelup" | "gameover";
 
