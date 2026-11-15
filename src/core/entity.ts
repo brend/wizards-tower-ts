@@ -92,4 +92,10 @@ export class Entity {
       other.y + other.h < this.y
     );
   }
+
+  contains(x: number, y: number): boolean {
+    return (
+      x >= this.x && x < this.x + this.w && y >= this.y && y < this.y + this.h
+    );
+  }
 }

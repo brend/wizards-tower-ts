@@ -1,10 +1,10 @@
-import { Entity } from "../core/entity";
+import { Entity } from "../core/Entity";
 import { Scene } from "../engine/Scene";
 import { createGrayscaleImage } from "../utils/utils.canvas";
 import { VoicePlayer } from "../engine/VoicePlayer";
 import { Projectile } from "../core/Projectile";
 import { Enemy, Minion, Tower, Upgrade } from "./Entities";
-import { Timer } from "../core/timer";
+import { Timer } from "../core/Timer";
 
 type GamePhase = "ready" | "playing" | "levelup" | "gameover";
 
@@ -18,14 +18,14 @@ export class WizardsTowerScene implements Scene {
   private spawnTimer = 3.0;
   private spawnCount = 0;
   private readonly fireballTimer = new Timer(3);
-  private minionTimer: Timer | undefined = new Timer(6);
+  private minionTimer: Timer | undefined;
   private readonly hudFireball = new Entity("assets/Fireball.png", 2);
   private hudFireballGray: HTMLCanvasElement | undefined;
   private readonly hudGameOver = new Entity("assets/Itisover.png");
   private readonly tower = new Tower("assets/Tower.png");
   private readonly wizard = new Entity("assets/Wizard.png", 4);
   private readonly groundY = 120;
-  private readonly upgrades: Upgrade[];
+  private upgrades: Upgrade[];
   private xp = 0;
   width: number;
   height: number;
@@ -44,13 +44,7 @@ export class WizardsTowerScene implements Scene {
     this.wizard.x = this.tower.x + 8;
     this.wizard.y = this.tower.y + 8;
 
-    // Keep upgrades alive across frames so their asynchronous image loads can finish.
-    this.upgrades = [100, 150, 200].map((x) => {
-      const upgrade = new Upgrade("fireball", "assets/Fireball.png", 2);
-      upgrade.x = x;
-      upgrade.y = 60;
-      return upgrade;
-    });
+    this.upgrades = [];
 
     this.background.add(this.wizard);
     this.background.add(this.tower);
@@ -90,9 +84,43 @@ export class WizardsTowerScene implements Scene {
     if (this.tower.hp <= 0) {
       this.phase = "gameover";
       this.playVoice("itsover");
-    } else if (this.xp >= 10) {
+    } else if (this.xp >= 3) {
       this.phase = "levelup";
+      this.generateUpgrades();
     }
+  }
+
+  private generateUpgrades(): void {
+    const u1 = new Upgrade("fireball", "assets/Upgrade-Fireball.png");
+    u1.x = 102;
+    u1.y = 60;
+    const u2 = new Upgrade("skeleton", "assets/Upgrade-Skeleton.png");
+    u2.x = 152;
+    u2.y = 60;
+    const u3 = new Upgrade("tower", "assets/Upgrade-Tower.png");
+    u3.x = 202;
+    u3.y = 60;
+    this.upgrades = [u1, u2, u3];
+  }
+
+  private chooseUpgrade(upgrade: Upgrade): void {
+    switch (upgrade.kind) {
+      case "fireball":
+        console.log("not implemented, my wizard");
+        break;
+      case "skeleton":
+        if (!this.minionTimer) {
+          this.minionTimer = new Timer(6);
+        } else {
+          this.minionTimer = new Timer(this.minionTimer.interval * 0.9);
+        }
+        break;
+      case "tower":
+        console.log("mind your own tower");
+        break;
+    }
+    this.xp = 0;
+    this.phase = "playing";
   }
 
   private updateTimers(dt: number): void {
@@ -413,7 +441,12 @@ export class WizardsTowerScene implements Scene {
         if (this.spawnFireball(x, y)) timer.reset();
         break;
       case "levelup":
-        console.log("you chose an upgrade");
+        for (const u of this.upgrades) {
+          if (u.contains(x, y)) {
+            this.chooseUpgrade(u);
+            break;
+          }
+        }
         break;
     }
   }
