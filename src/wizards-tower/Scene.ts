@@ -168,10 +168,11 @@ export class WizardsTowerScene implements Scene {
   }
 
   private spawnMinion(): void {
-    const minion = new Minion("assets/Skeleton.png");
+    const minion = new Minion("assets/Skeleton.png", 2);
     minion.x = this.tower.x;
     minion.y = this.groundY - 14;
     this.minions.add(minion);
+    this.playVoice("minion");
   }
 
   private handleCollisions() {
