@@ -36,9 +36,11 @@ class Combatant extends Entity implements Damageable {
   direction: 1 | -1;
   target: Damageable | null = null;
   hp: number;
+  maxHp: number;
   attackStrength: number;
   attackInterval: number;
   attackCooldown = 0;
+  showHp = true;
 
   protected constructor(
     spritesheet: string,
@@ -55,6 +57,7 @@ class Combatant extends Entity implements Damageable {
     this.moveSpeed = moveSpeed;
     this.direction = direction;
     this.hp = hp;
+    this.maxHp = hp;
     this.attackStrength = attackStrength;
     this.attackInterval = attackInterval;
   }
@@ -89,16 +92,6 @@ class Combatant extends Entity implements Damageable {
       this.attackCooldown = this.attackInterval;
     }
   }
-}
-
-export class Enemy extends Combatant {
-  maxHp: number;
-  showHp = true;
-
-  constructor(spritesheet: string, frameCount = 1) {
-    super(spritesheet, frameCount, "enemy", 30, 1, 2, 1, 2);
-    this.maxHp = this.hp;
-  }
 
   render(ctx: CanvasRenderingContext2D): void {
     super.render(ctx);
@@ -116,6 +109,19 @@ export class Enemy extends Combatant {
       ctx.fillStyle = "red";
       ctx.fillRect(this.x, this.y + 16, 16 * (this.hp / this.maxHp), 4);
     }
+  }
+}
+
+export class Enemy extends Combatant {
+  maxHp: number;
+
+  constructor(spritesheet: string, frameCount = 1) {
+    super(spritesheet, frameCount, "enemy", 30, 1, 2, 1, 2);
+    this.maxHp = this.hp;
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    super.render(ctx);
   }
 }
 
