@@ -17,7 +17,7 @@ export class WizardsTowerScene implements Scene {
   private readonly effects = new Set<Entity>();
   private spawnTimer = 3.0;
   private spawnCount = 0;
-  private readonly fireballTimer = new Timer(3);
+  private fireballTimer = new Timer(3);
   private minionTimer: Timer | undefined;
   private readonly hudFireball = new Entity("assets/Fireball.png", 2);
   private hudFireballGray: HTMLCanvasElement | undefined;
