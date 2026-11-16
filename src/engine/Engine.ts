@@ -109,9 +109,9 @@ export class Engine {
     this.scene.render(ctx);
 
     if (this.constants.showFps) {
-      ctx.font = "6px monospace";
+      ctx.font = '8px "Dogica Pixel", monospace';
       ctx.fillStyle = "#facc15";
-      ctx.fillText(`${this.fps} FPS`, this.constants.width - 32, 10);
+      ctx.fillText(`${this.fps} FPS`, this.constants.width - 48, 10);
     }
   }
 }

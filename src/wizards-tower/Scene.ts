@@ -107,7 +107,7 @@ export class WizardsTowerScene implements Scene {
     this.renderHud(ctx);
   }
   private text(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, color = '#f1e6cc'): void {
-    ctx.font = '7px monospace'; ctx.fillStyle = color; ctx.fillText(text, x, y);
+    ctx.font = '8px "Dogica Pixel", monospace'; ctx.fillStyle = color; ctx.fillText(text, x, y);
   }
   private renderHud(ctx: CanvasRenderingContext2D): void {
     const { build } = this.game;
@@ -126,19 +126,19 @@ export class WizardsTowerScene implements Scene {
     this.text(ctx, 'FIREBALL', 5, 150);
     for (let i = 0; i < build.fireball.capacity; i++) {
       ctx.fillStyle = i < build.fireball.charges ? '#ffb45d' : '#36415b';
-      ctx.fillRect(49 + i * 9, 144, 6, 7);
+      ctx.fillRect(5 + i * 11, 155, 8, 8);
     }
-    if (build.fireball.bonus) this.text(ctx, '+1', 81, 150, '#ffb45d');
-    ctx.fillStyle = '#36415b'; ctx.fillRect(5, 155, 72, 3);
-    ctx.fillStyle = '#ffb45d'; ctx.fillRect(5, 155, 72 * (build.fireball.charges === build.fireball.capacity ? 1 : 1 - build.fireball.timer.remainingFraction), 3);
-    this.text(ctx, build.fireball.charges === build.fireball.capacity ? 'Ready' : `${build.fireball.timer.remaining.toFixed(1)}s`, 5, 170);
+    if (build.fireball.bonus) this.text(ctx, '+1', 81, 163, '#ffb45d');
+    ctx.fillStyle = '#36415b'; ctx.fillRect(5, 169, 90, 3);
+    ctx.fillStyle = '#ffb45d'; ctx.fillRect(5, 169, 90 * (build.fireball.charges === build.fireball.capacity ? 1 : 1 - build.fireball.timer.remainingFraction), 3);
+    this.text(ctx, build.fireball.charges === build.fireball.capacity ? 'Ready' : `${build.fireball.timer.remaining.toFixed(1)}s`, 45, 163);
     this.text(ctx, `LV ${build.level}  XP ${build.xp}/${build.xpRequired}`, 103, 150);
     ctx.fillStyle = '#36415b'; ctx.fillRect(103, 155, 94, 3);
     ctx.fillStyle = '#aa99ed'; ctx.fillRect(103, 155, 94 * Math.min(1, build.xp / build.xpRequired), 3);
     this.text(ctx, `BEST ${this.bestScore}`, 103, 170, '#b5bfd5');
     this.text(ctx, `SUMMONS ${this.game.minions.length}/${build.summonTimer ? build.skeletonCap : 0}`, 219, 150);
-    const ward = build.tower.temporaryWard > 0 ? 'Bonus ward ready' : build.tower.wardReady ? 'Ward ready' : build.tower.wardUnlocked ? `Ward ${Math.ceil(build.tower.wardRemaining)}s` : 'Ward locked';
+    const ward = build.tower.temporaryWard > 0 ? 'Bonus ward' : build.tower.wardReady ? 'Ward ready' : build.tower.wardUnlocked ? `Ward ${Math.ceil(build.tower.wardRemaining)}s` : 'Ward locked';
     this.text(ctx, ward, 219, 161, '#9de4df');
-    this.text(ctx, build.summonTimer ? `Summon ${Math.max(0, build.summonTimer.remaining).toFixed(1)}s` : 'Choose Raise Skeleton', 219, 172, '#b5bfd5');
+    this.text(ctx, build.summonTimer ? `Summon ${Math.max(0, build.summonTimer.remaining).toFixed(1)}s` : 'Not learned', 219, 172, '#b5bfd5');
   }
 }

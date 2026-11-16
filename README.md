@@ -135,3 +135,16 @@ python3 -m unittest discover -s tools/voice -v
 
 See the [voice workshop](tools/voice/README.md) for generation details. Its older
 JavaScript integration examples predate the current TypeScript layout.
+
+## Font attribution and license
+
+The game uses **Dogica Pixel**, regular and bold, by **Roberto Mocci**,
+copyright © 2020. [Author's font page](https://rmocci.itch.io/dogica).
+
+The unmodified font files are bundled in `public/assets/fonts/dogica/` under the
+[SIL Open Font License 1.1](public/assets/fonts/dogica/OFL.txt), including the
+original copyright notice and Reserved Font Name. The license permits embedding
+and redistribution with the game, including webfont use. These font files retain
+the OFL; the repository's ISC software license does not replace it. Both the font
+files and their license are included in production builds. The game footer also
+links to the author and the bundled license.

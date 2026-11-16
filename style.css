@@ -22,7 +22,7 @@ canvas {
   padding: 16px;
   color: white;
   background: #172036;
-  font-family: system-ui, sans-serif;
+  font-family: var(--game-font);
   text-align: center;
 }
 
@@ -68,11 +68,12 @@ button {
 
 [hidden] { display: none !important; }
 
-body { font-family: system-ui, sans-serif; color: #f1e6cc; }
-button { background: #a94732; padding: 10px 16px; }
+body { font-family: var(--game-font); color: #f1e6cc; font-size: 16px; line-height: 1.75; }
+button { font-family: inherit; background: #a94732; padding: 10px 16px; }
 button:hover:not(:disabled) { filter: brightness(1.16); }
 button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 3px solid #ffdc8a; outline-offset: 2px; }
-.start-screen p { max-width: 34em; line-height: 1.6; }
+.start-screen h1 { font-size: 32px; line-height: 1.5; }
+.start-screen p { max-width: 34em; line-height: 1.75; }
 .game-overlay {
   grid-area: 1 / 1;
   z-index: 2;
@@ -84,21 +85,21 @@ button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 3px
   min-height: 0;
   max-height: 100%;
 }
-.overlay-content { box-sizing: border-box; width: min(100%, 1000px); padding: clamp(12px, 3vw, 40px); text-align: center; }
-.overlay-content h2 { margin: 4px 0 8px; font-size: clamp(20px, 3vw, 36px); }
-.overlay-content p { color: #b5bfd5; line-height: 1.5; }
+.overlay-content { box-sizing: border-box; width: min(100%, 1100px); padding: clamp(12px, 3vw, 40px); text-align: center; }
+.overlay-content h2 { margin: 4px 0 8px; font-size: 24px; line-height: 1.5; }
+.overlay-content p { color: #b5bfd5; line-height: 1.75; }
 .eyebrow { color: #ffcd84 !important; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; }
 #upgrade-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
 .upgrade-card { display: grid; grid-template-rows: auto 96px auto 1fr auto; gap: 12px; margin: 0; padding: 20px; background: #1b263e; border: 1px solid #45516b; text-align: left; line-height: 1.5; }
 .upgrade-card-art { width: 96px; height: 96px; justify-self: center; object-fit: contain; image-rendering: pixelated; }
-.upgrade-card strong { font-size: clamp(16px, 2vw, 23px); line-height: 1.2; }
-.card-description { color: #ced5e4; font-size: 14px; }
+.upgrade-card strong { font-size: 16px; line-height: 1.75; }
+.card-description { color: #ced5e4; font-size: 16px; line-height: 1.75; }
 .upgrade-card small { color: #aab8d1; }
 .card-path { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
 .path-fireball .card-path { color: #ffb45d; }
 .path-skeleton .card-path { color: #7ee8ba; }
 .path-tower .card-path { color: #aa99ed; }
-.result-score { font-size: clamp(28px, 5vw, 64px); color: #ffcd84; font-weight: 800; }
+.result-score { font-size: 48px; color: #ffcd84; font-weight: 700; }
 .result-actions { margin: 18px 0; }
 .secondary { background: #33415e; }
 #result-seed { color: #8795b2; }
@@ -108,14 +109,16 @@ summary { cursor: pointer; }
 .game { cursor: crosshair; touch-action: manipulation; }
 @media (max-width: 650px) {
   #upgrade-cards { grid-template-columns: 1fr; margin-top: 12px; gap: 8px; }
-  .upgrade-card { grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: repeat(4, auto); padding: 12px; gap: 4px 14px; }
+  .upgrade-card { grid-template-columns: 48px minmax(0, 1fr); grid-template-rows: repeat(4, auto); padding: 12px; gap: 4px 12px; }
   .upgrade-card > :not(.upgrade-card-art) { grid-column: 2; }
-  .upgrade-card-art { grid-column: 1; grid-row: 1 / 5; align-self: center; width: 72px; height: 72px; }
+  .upgrade-card-art { grid-column: 1; grid-row: 1 / 5; align-self: center; width: 48px; height: 48px; }
+  .overlay-content h2 { font-size: 16px; }
   .overlay-content > p { margin: 6px 0; font-size: 12px; }
   .eyebrow { display: none; }
   .result-actions { margin: 8px 0; }
-  .start-screen h1 { font-size: 22px; }
-  .start-screen p { font-size: 13px; margin: 8px 0; }
+  .start-screen h1 { font-size: 16px; }
+  .start-screen p { font-size: 12px; margin: 8px 0; }
+  .start-screen button, .controls button { font-size: 12px; }
 }
 #playfield { position: relative; display: grid; min-width: 0; }
 #playfield > .start-screen, #playfield > .game-overlay { position: absolute; inset: 0; }
@@ -128,3 +131,25 @@ summary { cursor: pointer; }
     border-radius: 12px;
   }
 }
+/* Dogica Pixel by Roberto Mocci, SIL OFL 1.1; see assets/fonts/dogica/OFL.txt. */
+@font-face {
+  font-family: 'Dogica Pixel';
+  src: url('/assets/fonts/dogica/dogicapixel.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dogica Pixel';
+  src: url('/assets/fonts/dogica/dogicapixelbold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root { --game-font: 'Dogica Pixel', monospace; }
+
+
+.font-credit { grid-row: 3; margin: 8px 4px 0; color: #b5bfd5; font-size: 8px; line-height: 2; text-align: center; }
+.font-credit a { color: #ffcd84; text-underline-offset: 3px; }
