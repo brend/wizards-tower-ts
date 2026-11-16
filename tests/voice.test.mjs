@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { VoicePlayer } from "../js/core/voice.js";
+import { compiled } from "./modules.mjs";
+const { VoicePlayer } = await compiled("engine/VoicePlayer");
 
 const originalFetch = globalThis.fetch;
 const originalAudioContext = globalThis.AudioContext;

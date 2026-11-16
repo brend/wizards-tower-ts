@@ -1,30 +1,46 @@
 export class Timer {
-  interval: number;
   remaining: number;
-
-  constructor(interval: number) {
-    this.interval = interval;
+  constructor(public interval: number) {
+    if (!(interval > 0) || !Number.isFinite(interval)) throw new Error('Timer interval must be positive');
     this.remaining = interval;
   }
-
-  advance(dt: number) {
-    this.remaining -= dt;
+  advance(dt: number): void { this.remaining -= dt; }
+  get isOver(): boolean { return this.remaining <= 1e-9; }
+  get remainingFraction(): number { return Math.min(1, Math.max(0, this.remaining / this.interval)); }
+  reset(): void { this.remaining = this.interval; }
+  complete(): void { this.remaining = 0; }
+  setInterval(interval: number): void {
+    if (!(interval > 0) || !Number.isFinite(interval)) throw new Error('Timer interval must be positive');
+    const fraction = this.remainingFraction;
+    this.interval = interval;
+    this.remaining = fraction * interval;
   }
+}
 
-  get isOver(): boolean {
-    return this.remaining <= 0;
+/** Sequential charges: spending another charge never restarts an active recharge. */
+export class ChargePool {
+  charges: number;
+  timer: Timer;
+  bonus = 0;
+  constructor(public capacity: number, interval: number) {
+    this.charges = capacity;
+    this.timer = new Timer(interval);
   }
-
-  get remainingFraction(): number {
-    const f = this.remaining / this.interval;
-    return f < 0 ? 0 : f;
+  get available(): number { return this.charges + this.bonus; }
+  advance(dt: number): void {
+    if (this.charges >= this.capacity) return;
+    this.timer.advance(dt);
+    while (this.timer.isOver && this.charges < this.capacity) {
+      this.charges++;
+      this.timer.remaining += this.timer.interval;
+    }
+    if (this.charges === this.capacity) this.timer.reset();
   }
-
-  reset(): void {
-    this.remaining = this.interval;
+  spend(): boolean {
+    if (this.bonus > 0) { this.bonus--; return true; }
+    if (this.charges === 0) return false;
+    this.charges--;
+    return true;
   }
-
-  complete(): void {
-    this.remaining = 0;
-  }
+  addSlot(): void { this.capacity++; this.charges++; }
 }

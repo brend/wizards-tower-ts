@@ -1,5 +1,5 @@
-import { generateCanvas } from "../utils/utils.canvas";
-import { Scene } from "./Scene";
+import { generateCanvas } from "../utils/utils.canvas.js";
+import { Scene } from "./Scene.js";
 
 export class Engine {
   constants: { width: number; height: number; showFps: boolean; zoom: number };
@@ -38,7 +38,7 @@ export class Engine {
     const container = document.getElementById("container");
     if (!container) throw Error("Could not find HTML element 'container'");
     container.style.setProperty("--scene-aspect", String(width / height));
-    container.appendChild(this.viewport);
+    (document.getElementById("playfield") ?? container).appendChild(this.viewport);
 
     this.viewport.addEventListener("click", this.handleClick);
   }
@@ -109,9 +109,9 @@ export class Engine {
     this.scene.render(ctx);
 
     if (this.constants.showFps) {
-      ctx.font = "6px monospace";
+      ctx.font = '8px "Dogica Pixel", monospace';
       ctx.fillStyle = "#facc15";
-      ctx.fillText(`${this.fps} FPS`, this.constants.width - 32, 10);
+      ctx.fillText(`${this.fps} FPS`, this.constants.width - 48, 10);
     }
   }
 }
