@@ -43,10 +43,17 @@ export function bindWizardsTowerControls(engine: Engine, scene: WizardsTowerScen
         const button = document.createElement('button');
         button.type = 'button'; button.className = `upgrade-card path-${offer.path.toLowerCase()}`;
         const path = document.createElement('span'); path.className = 'card-path'; path.textContent = `${i + 1} · ${offer.path}`;
+        // The original cards identify the upgrade family; the text identifies its specific effect.
+        const art = document.createElement('img');
+        art.className = 'upgrade-card-art';
+        art.src = `assets/Upgrade-${offer.path}.png`;
+        art.alt = ''; // The adjacent path label already names the family.
+        art.width = art.height = 24;
+        art.draggable = false;
         const title = document.createElement('strong'); title.textContent = offer.title;
-        const description = document.createElement('span'); description.textContent = offer.description;
+        const description = document.createElement('span'); description.className = 'card-description'; description.textContent = offer.description;
         const rank = document.createElement('small'); rank.textContent = offer.rank;
-        button.append(path, title, description, rank);
+        button.append(path, art, title, description, rank);
         button.addEventListener('click', () => {
           if (!engine.isRunning) return;
           game.chooseUpgrade(offer.id);

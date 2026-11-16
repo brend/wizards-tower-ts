@@ -89,9 +89,10 @@ button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 3px
 .overlay-content p { color: #b5bfd5; line-height: 1.5; }
 .eyebrow { color: #ffcd84 !important; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; }
 #upgrade-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
-.upgrade-card { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 20px; background: #1b263e; border: 1px solid #45516b; text-align: left; line-height: 1.5; }
+.upgrade-card { display: grid; grid-template-rows: auto 96px auto 1fr auto; gap: 12px; margin: 0; padding: 20px; background: #1b263e; border: 1px solid #45516b; text-align: left; line-height: 1.5; }
+.upgrade-card-art { width: 96px; height: 96px; justify-self: center; object-fit: contain; image-rendering: pixelated; }
 .upgrade-card strong { font-size: clamp(16px, 2vw, 23px); line-height: 1.2; }
-.upgrade-card > span:not(.card-path) { color: #ced5e4; font-size: 14px; flex: 1; }
+.card-description { color: #ced5e4; font-size: 14px; }
 .upgrade-card small { color: #aab8d1; }
 .card-path { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
 .path-fireball .card-path { color: #ffb45d; }
@@ -107,7 +108,9 @@ summary { cursor: pointer; }
 .game { cursor: crosshair; touch-action: manipulation; }
 @media (max-width: 650px) {
   #upgrade-cards { grid-template-columns: 1fr; margin-top: 12px; gap: 8px; }
-  .upgrade-card { padding: 12px; gap: 6px; }
+  .upgrade-card { grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: repeat(4, auto); padding: 12px; gap: 4px 14px; }
+  .upgrade-card > :not(.upgrade-card-art) { grid-column: 2; }
+  .upgrade-card-art { grid-column: 1; grid-row: 1 / 5; align-self: center; width: 72px; height: 72px; }
   .overlay-content > p { margin: 6px 0; font-size: 12px; }
   .eyebrow { display: none; }
   .result-actions { margin: 8px 0; }
