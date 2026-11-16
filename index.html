@@ -22,10 +22,39 @@
   </head>
   <body>
     <div id="container">
+      <div id="playfield">
       <div id="start-screen" class="start-screen">
         <h1>Wizard's Tower</h1>
-        <p>Defend your tower. Click or touch to hurl fireballs.</p>
+        <p>Survive the onslaught. Aim and click or tap to cast.
+          Store fireballs, raise skeletons, and build your defense.</p>
         <button id="start-button" type="button">Start game</button>
+      </div>
+      <section id="upgrade-screen" class="game-overlay" role="dialog" aria-modal="true" aria-labelledby="upgrade-heading" hidden>
+        <div class="overlay-content">
+          <p class="eyebrow">A moment to grow stronger</p>
+          <h2 id="upgrade-heading">Choose your upgrade</h2>
+          <p>Combat is paused. Choose one card, or press 1, 2, or 3.</p>
+          <div id="upgrade-cards"></div>
+        </div>
+      </section>
+      <section id="result-screen" class="game-overlay" role="dialog" aria-modal="true" aria-labelledby="result-heading" hidden>
+        <div class="overlay-content">
+          <p class="eyebrow">The tower has fallen</p>
+          <h2 id="result-heading">Your last stand</h2>
+          <div id="result-score" class="result-score"></div>
+          <p id="result-details"></p>
+          <p id="result-kills"></p>
+          <details><summary>Your build</summary><p id="result-build"></p></details>
+          <div class="result-actions">
+            <button id="restart-button" type="button">New run</button>
+            <button id="retry-button" type="button" class="secondary">Retry same seed</button>
+          </div>
+          <small id="result-seed"></small>
+        </div>
+      </section>
+      <div id="pause-screen" class="game-overlay pause-overlay" hidden>
+        <div class="overlay-content"><h2>Paused</h2><p>Press Resume or Escape to continue.</p></div>
+      </div>
       </div>
       <div class="controls">
         <button id="pause-button" type="button" disabled>Pause</button>

@@ -1,4 +1,4 @@
-import { loadImage } from "./assets";
+import { loadImage } from "./assets.js";
 
 export class Entity {
   frameCount: number;

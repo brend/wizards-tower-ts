@@ -65,3 +65,63 @@ button {
     url("/assets/Cursor.png") 4 4,
     auto;
 }
+
+[hidden] { display: none !important; }
+
+body { font-family: system-ui, sans-serif; color: #f1e6cc; }
+button { background: #a94732; padding: 10px 16px; }
+button:hover:not(:disabled) { filter: brightness(1.16); }
+button:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 3px solid #ffdc8a; outline-offset: 2px; }
+.start-screen p { max-width: 34em; line-height: 1.6; }
+.game-overlay {
+  grid-area: 1 / 1;
+  z-index: 2;
+  background: rgb(8 13 26 / 94%);
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  overflow: auto;
+  min-height: 0;
+  max-height: 100%;
+}
+.overlay-content { box-sizing: border-box; width: min(100%, 1000px); padding: clamp(12px, 3vw, 40px); text-align: center; }
+.overlay-content h2 { margin: 4px 0 8px; font-size: clamp(20px, 3vw, 36px); }
+.overlay-content p { color: #b5bfd5; line-height: 1.5; }
+.eyebrow { color: #ffcd84 !important; text-transform: uppercase; letter-spacing: .16em; font-size: 11px; }
+#upgrade-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.upgrade-card { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 20px; background: #1b263e; border: 1px solid #45516b; text-align: left; line-height: 1.5; }
+.upgrade-card strong { font-size: clamp(16px, 2vw, 23px); line-height: 1.2; }
+.upgrade-card > span:not(.card-path) { color: #ced5e4; font-size: 14px; flex: 1; }
+.upgrade-card small { color: #aab8d1; }
+.card-path { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
+.path-fireball .card-path { color: #ffb45d; }
+.path-skeleton .card-path { color: #7ee8ba; }
+.path-tower .card-path { color: #aa99ed; }
+.result-score { font-size: clamp(28px, 5vw, 64px); color: #ffcd84; font-weight: 800; }
+.result-actions { margin: 18px 0; }
+.secondary { background: #33415e; }
+#result-seed { color: #8795b2; }
+details { max-width: 700px; margin: auto; }
+summary { cursor: pointer; }
+.controls { padding-top: 4px; }
+.game { cursor: crosshair; touch-action: manipulation; }
+@media (max-width: 650px) {
+  #upgrade-cards { grid-template-columns: 1fr; margin-top: 12px; gap: 8px; }
+  .upgrade-card { padding: 12px; gap: 6px; }
+  .overlay-content > p { margin: 6px 0; font-size: 12px; }
+  .eyebrow { display: none; }
+  .result-actions { margin: 8px 0; }
+  .start-screen h1 { font-size: 22px; }
+  .start-screen p { font-size: 13px; margin: 8px 0; }
+}
+#playfield { position: relative; display: grid; min-width: 0; }
+#playfield > .start-screen, #playfield > .game-overlay { position: absolute; inset: 0; }
+@media (max-width: 650px) {
+  #playfield > .game-overlay {
+    position: fixed;
+    inset: 12px 12px 76px;
+    max-height: none;
+    border: 1px solid #45516b;
+    border-radius: 12px;
+  }
+}

@@ -1,98 +1,119 @@
-import { Engine } from "../engine/Engine";
-import { VoicePlayer } from "../engine/VoicePlayer";
-import { WizardsTowerScene } from "./Scene";
+import type { Engine } from '../engine/Engine.js';
+import { formatTime, type WizardsTowerScene } from './Scene.js';
+import type { VoicePlayer } from '../engine/VoicePlayer.js';
 
-export function bindWizardsTowerControls(
-  engine: Engine,
-  scene: WizardsTowerScene,
-  voices: VoicePlayer,
-): () => void {
-  const button = (id: string): HTMLButtonElement => {
-    const element = document.getElementById(id);
-    if (!(element instanceof HTMLButtonElement))
-      throw new Error(`Missing button: ${id}`);
-    return element;
+export function bindWizardsTowerControls(engine: Engine, scene: WizardsTowerScene, voices: VoicePlayer): () => void {
+  const element = <T extends HTMLElement>(id: string): T => {
+    const found = document.getElementById(id);
+    if (!found) throw new Error(`Missing control: ${id}`);
+    return found as T;
   };
-
-  const start = button("start-button");
-  const pause = button("pause-button");
-  const resume = button("resume-button");
-  const sound = button("sound-button");
-
-  const startScreen = document.getElementById("start-screen");
-  if (!startScreen) throw new Error("Missing start screen");
-
+  const start = element<HTMLButtonElement>('start-button');
+  const pause = element<HTMLButtonElement>('pause-button');
+  const resume = element<HTMLButtonElement>('resume-button');
+  const sound = element<HTMLButtonElement>('sound-button');
+  const restart = element<HTMLButtonElement>('restart-button');
+  const retry = element<HTMLButtonElement>('retry-button');
+  const startScreen = element('start-screen');
+  const upgradeScreen = element('upgrade-screen');
+  const resultScreen = element('result-screen');
+  const pauseScreen = element('pause-screen');
+  const upgradeCards = element('upgrade-cards');
+  const abort = new AbortController();
+  const listen = (target: EventTarget, type: string, fn: EventListener) => target.addEventListener(type, fn, { signal: abort.signal });
+  let shownOffer: unknown;
   const updateSoundButton = () => {
-    sound.textContent = voices.ready ? "Mute sound" : "Enable sound";
-    sound.setAttribute("aria-pressed", String(voices.ready));
+    sound.textContent = voices.ready ? 'Mute sound' : 'Enable sound';
+    sound.setAttribute('aria-pressed', String(Boolean(voices.ready)));
   };
-
-  const onStart = async () => {
-    if (start.disabled) return;
-
-    start.disabled = true;
-    start.textContent = "Starting…";
-
-    try {
-      // Must be invoked directly from the user gesture.
-      await voices.enable();
-    } catch (error) {
-      console.warn("Could not enable sound:", error);
-    } finally {
-      scene.begin();
-      engine.start();
-
-      startScreen.hidden = true;
-      pause.disabled = false;
-      resume.disabled = false;
-      sound.disabled = false;
-      updateSoundButton();
-      pause.focus();
+  const sync = () => {
+    const game = scene.game;
+    const playing = game.phase === 'playing';
+    startScreen.hidden = game.phase !== 'ready';
+    upgradeScreen.hidden = game.phase !== 'levelup';
+    resultScreen.hidden = game.phase !== 'gameover';
+    pauseScreen.hidden = engine.isRunning || !playing;
+    pause.disabled = !engine.isRunning || !playing;
+    resume.disabled = engine.isRunning || !playing;
+    sound.disabled = game.phase === 'ready';
+    if (game.phase === 'levelup' && shownOffer !== game.offers) {
+      shownOffer = game.offers;
+      element('upgrade-heading').textContent = `Choose your level ${game.build.level + 1} upgrade`;
+      upgradeCards.replaceChildren(...game.offers.map((offer, i) => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = `upgrade-card path-${offer.path.toLowerCase()}`;
+        const path = document.createElement('span'); path.className = 'card-path'; path.textContent = `${i + 1} · ${offer.path}`;
+        const title = document.createElement('strong'); title.textContent = offer.title;
+        const description = document.createElement('span'); description.textContent = offer.description;
+        const rank = document.createElement('small'); rank.textContent = offer.rank;
+        button.append(path, title, description, rank);
+        button.addEventListener('click', () => {
+          if (!engine.isRunning) return;
+          game.chooseUpgrade(offer.id);
+          if (scene.game.phase === 'playing') engine.viewport.focus();
+        });
+        return button;
+      }));
+      upgradeScreen.scrollTop = 0;
+      upgradeCards.querySelector('button')?.focus({ preventScroll: true });
+    }
+    if (game.phase === 'gameover') {
+      element('result-score').textContent = String(game.score);
+      element('result-details').textContent = `Survived ${formatTime(game.time)} · Best ${scene.bestScore} · Level ${game.build.level}`;
+      element('result-kills').textContent = Object.entries(game.stats.kills).map(([kind, count]) => `${kind}: ${count}`).join(' · ');
+      element('result-build').textContent = game.stats.upgrades.length ? game.stats.upgrades.map(upgrade => upgrade.title).join(' → ') : 'No upgrades earned this run.';
+      element('result-seed').textContent = `Run seed ${game.seed} · Endless v1`;
+      restart.focus({ preventScroll: true });
     }
   };
-
-  const onPause = () => engine.stop();
-  const onResume = () => engine.start();
-
-  const onSound = async () => {
-    if (voices.ready) {
-      voices.disable();
+  const previousSceneHandler = scene.onStateChange;
+  scene.onStateChange = sync;
+  listen(start, 'click', async () => {
+    if (start.disabled) return;
+    start.disabled = true; start.textContent = 'Starting…';
+    try { await voices.enable(); } catch (error) { console.warn('Could not enable sound:', error); }
+    finally { engine.start(); scene.begin(); sync(); updateSoundButton(); engine.viewport.focus(); }
+  });
+  listen(pause, 'click', () => { engine.stop(); voices.stop(); sync(); resume.focus(); });
+  listen(resume, 'click', () => { engine.start(); sync(); engine.viewport.focus(); });
+  listen(sound, 'click', async () => {
+    if (voices.ready) { voices.disable(); updateSoundButton(); return; }
+    sound.disabled = true;
+    try { if (await voices.enable()) scene.onAudioEnabled(); }
+    catch (error) { console.warn('Could not enable sound:', error); }
+    finally { sound.disabled = false; updateSoundButton(); }
+  });
+  const newRun = (sameSeed: boolean) => { engine.start(); scene.restart(sameSeed); sync(); engine.viewport.focus(); };
+  listen(restart, 'click', () => newRun(false));
+  listen(retry, 'click', () => newRun(true));
+  listen(document, 'keydown', event => {
+    const key = event as KeyboardEvent;
+    if (key.repeat || key.altKey || key.ctrlKey || key.metaKey) return;
+    const modal = !upgradeScreen.hidden ? upgradeScreen : !resultScreen.hidden ? resultScreen : null;
+    if (key.key === 'Tab' && modal) {
+      const targets = [...modal.querySelectorAll<HTMLElement>('button, summary')];
+      const first = targets[0], last = targets.at(-1);
+      if (key.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+        key.preventDefault(); last?.focus();
+      } else if (!key.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+        key.preventDefault(); first?.focus();
+      }
       return;
     }
-
-    sound.disabled = true;
-    try {
-      if (await voices.enable()) scene.onAudioEnabled();
-    } catch (error) {
-      console.warn("Could not enable sound:", error);
-    } finally {
-      sound.disabled = false;
-      updateSoundButton();
+    if (scene.game.phase === 'levelup' && engine.isRunning && /^[123]$/.test(key.key)) {
+      const offer = scene.game.offers[Number(key.key) - 1];
+      if (offer) { key.preventDefault(); scene.game.chooseUpgrade(offer.id); if (!upgradeScreen.hidden) return; engine.viewport.focus(); }
+    } else if (key.key === 'Escape' && scene.game.phase === 'playing') {
+      if (engine.isRunning) { engine.stop(); voices.stop(); } else engine.start();
+      sync();
     }
-  };
-
+  });
+  listen(document, 'visibilitychange', () => {
+    if (document.hidden && scene.game.phase === 'playing') { engine.stop(); voices.stop(); sync(); }
+  });
   const previousSoundHandler = voices.onStateChange;
-  const onSoundStateChange = () => {
-    previousSoundHandler();
-    updateSoundButton();
-  };
-
-  voices.onStateChange = onSoundStateChange;
-
-  start.addEventListener("click", onStart);
-  pause.addEventListener("click", onPause);
-  resume.addEventListener("click", onResume);
-  sound.addEventListener("click", onSound);
-
-  updateSoundButton();
-
-  return () => {
-    start.removeEventListener("click", onStart);
-    pause.removeEventListener("click", onPause);
-    resume.removeEventListener("click", onResume);
-    sound.removeEventListener("click", onSound);
-
-    if (voices.onStateChange === onSoundStateChange)
-      voices.onStateChange = previousSoundHandler;
-  };
+  voices.onStateChange = () => { previousSoundHandler(); updateSoundButton(); };
+  engine.viewport.tabIndex = 0;
+  updateSoundButton(); sync();
+  return () => { abort.abort(); voices.onStateChange = previousSoundHandler; scene.onStateChange = previousSceneHandler; };
 }
