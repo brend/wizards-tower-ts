@@ -106,7 +106,7 @@ export class WizardsTowerScene implements Scene {
   private chooseUpgrade(upgrade: Upgrade): void {
     switch (upgrade.kind) {
       case "fireball":
-        console.log("not implemented, my wizard");
+        this.fireballTimer = new Timer(this.fireballTimer.interval * 0.9);
         break;
       case "skeleton":
         if (!this.minionTimer) {
@@ -116,7 +116,7 @@ export class WizardsTowerScene implements Scene {
         }
         break;
       case "tower":
-        console.log("mind your own tower");
+        this.tower.takeDamage(-1);
         break;
     }
     this.xp = 0;
