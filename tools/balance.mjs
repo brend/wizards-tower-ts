@@ -1,7 +1,7 @@
 // Repeatable targeting policy, not a substitute for human playtesting.
 import { compiled } from '../tests/modules.mjs';
-const { Game } = await compiled('wizards-tower/Game');
-const { Random } = await compiled('wizards-tower/Balance');
+const { Game } = await compiled('Game');
+const { Random } = await compiled('Balance');
 const priorities = {
   fireball: ['casting', 'pierce', 'reserve', 'skeleton', 'fortify', 'ward', 'bones', 'ritual', 'legion', 'repair', 'surge', 'rally', 'barrier'],
   skeleton: ['skeleton', 'bones', 'ritual', 'legion', 'casting', 'pierce', 'fortify', 'ward', 'reserve', 'repair', 'rally', 'surge', 'barrier'],

@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compiled } from './modules.mjs';
-const { Game } = await compiled('wizards-tower/Game');
-const { Tower, Combatant, resolveCombat } = await compiled('wizards-tower/Entities');
-const { Timer, ChargePool } = await compiled('core/Timer');
-const { Projectile, sweptContact } = await compiled('core/Projectile');
-const { Director, segmentBudget } = await compiled('wizards-tower/Director');
-const { Build } = await compiled('wizards-tower/Upgrades');
-const { BALANCE, ENEMIES } = await compiled('wizards-tower/Balance');
+const { Game } = await compiled('Game');
+const { Tower, Combatant, resolveCombat } = await compiled('Entities');
+import { Timer } from '@waldrumpus/orb';
+const { ChargePool } = await compiled('ChargePool');
+const { Projectile, sweptContact } = await compiled('Projectile');
+const { Director, segmentBudget } = await compiled('Director');
+const { Build } = await compiled('Upgrades');
+const { BALANCE, ENEMIES } = await compiled('Balance');
 const near = (a, b, epsilon = 1e-7) => assert.ok(Math.abs(a - b) < epsilon, `${a} != ${b}`);
 const sandbox = () => { const game = new Game(42); game.director.update = () => []; game.begin(); return game; };
 const advance = (game, duration, hz = 60) => { for (let i = 0; i < Math.round(duration * hz); i++) game.update(1 / hz); };
@@ -168,7 +169,7 @@ test('whole no-input runs end identically at different display rates', () => {
 });
 
 test('run storage keeps a versioned best and bounds history even when storage fails', async () => {
-  const { readHistory, saveRun } = await compiled('wizards-tower/RunHistory');
+  const { readHistory, saveRun } = await compiled('RunHistory');
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const values = new Map();
   try {

@@ -1,6 +1,6 @@
 import { Engine } from "@waldrumpus/orb";
-import { WizardsTowerScene } from "./wizards-tower/Scene.js";
-import { bindWizardsTowerControls } from "./wizards-tower/Controls.js";
+import { WizardsTowerScene } from "./Scene.js";
+import { bindWizardsTowerControls } from "./Controls.js";
 import { VoicePlayer } from "@waldrumpus/orb";
 
 const voices = new VoicePlayer({

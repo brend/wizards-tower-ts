@@ -10,7 +10,7 @@ const markup = await (await fetch('index.html')).text();
 const page = new DOMParser().parseFromString(markup, 'text/html');
 document.body.prepend(page.getElementById('container'));
 await import('../src/main.ts');
-const { Combatant } = await import('../src/wizards-tower/Entities.ts');
+const { Combatant } = await import('../src/Entities.ts');
 const { Timer } = await import('../src/core/Timer.ts');
 const fixtures = document.createElement('div'); fixtures.id = 'fixtures';
 const action = (label, callback) => { const button = document.createElement('button'); button.textContent = label; button.onclick = callback; fixtures.append(button); };
