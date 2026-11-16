@@ -22,5 +22,8 @@
   },
   "allowScripts": {
     "fsevents@2.3.3": true
+  },
+  "dependencies": {
+    "@waldrumpus/orb": "^0.1.0"
   }
 }
